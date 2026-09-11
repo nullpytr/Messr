@@ -1,6 +1,6 @@
 # Messr
 
-Cross-platform port of `rdmsr`/`wrmsr` from [intel/msr-tools](https://github.com/intel/msr-tools). Windows support added via the [wMSR](https://github.com/nullpytr/wMSR) kernel driver. 
+A fully featured cross-platform port of `rdmsr`/`wrmsr` from [intel/msr-tools](https://github.com/intel/msr-tools). Windows support added via the [wMSR](https://github.com/nullpytr/wMSR) kernel driver. 
 
 The upstream source files are unchanged, compatibility headers (`include/compat`) bridge the Linux kernel device (`/dev/cpu/N/msr`) interface to the wMSR driver interface at compile time.
 
@@ -41,38 +41,34 @@ Usage: wrmsr [options] regno value...
   --processor #  -p  Select processor number (default 0)
 ```
 
-## Build
+## Build for Windows 
 
-### for Windows 
+Output at `build/win64/rdmsr.exe` and `build/win64/wrmsr.exe`.
 
-Outputs `build/win64/rdmsr.exe` and `build/win64/wrmsr.exe`.
-
-#### 1. Native
+### 1. Native
 
 Requires MSVC. Run from a [Developer Command Prompt](https://learn.microsoft.com/en-us/visualstudio/ide/reference/command-prompt-powershell).
-
-Use the provided build script:
 ```cmd
 scripts\build
 ```
 
-#### 2. Cross-compile from macOS or Linux
+### 2. Cross-compile from macOS or Linux
 
-Requires [mingw-w64](https://www.mingw-w64.org).  
-On macOS: 
+Requires [mingw-w64](https://www.mingw-w64.org). On macOS: 
 ```
 brew install mingw-w64
 ```
 
-Use the provided build script:
-
+Run from any terminal:
 ```sh
-sh scripts/build.sh win64
+scripts/build.sh win64
 ```
 
 
-### for Linux
+## Build for Linux
+
+Output at `build/native/rdmsr` and `build/native/wrmsr`.
 
 ```sh
-sh scripts/build.sh native
+scripts/build.sh native
 ``` 
