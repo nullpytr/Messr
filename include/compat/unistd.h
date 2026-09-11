@@ -7,6 +7,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/types.h>
 #include <win32.h>
 
 static size_t pread(int fd, void *data, size_t size, off_t offset) {
