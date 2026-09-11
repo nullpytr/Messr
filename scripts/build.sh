@@ -6,15 +6,15 @@ TARGET=${1:-win32}
 
 case "$TARGET" in
     win32)
-        cmake -B build -DCMAKE_TOOLCHAIN_FILE=cmake/x86_64-w64-mingw32.cmake
+        cmake -B build-win32 -DCMAKE_TOOLCHAIN_FILE=cmake/x86_64-w64-mingw32.cmake
+        cmake --build build-win32
         ;;
     native)
-        cmake -B build
+        cmake -B build-native
+        cmake --build build-native
         ;;
     *)
         echo "Usage: $0 [win32|native]"
         exit 1
         ;;
 esac
-
-cmake --build build
