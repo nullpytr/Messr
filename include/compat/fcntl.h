@@ -9,8 +9,6 @@
 #include <limits.h>
 #include <win32.h>
 
-static HANDLE msr_device = INVALID_HANDLE_VALUE;
-
 static int open(const char *name, int flags) {
     if (msr_device == INVALID_HANDLE_VALUE) {
         msr_device = msr_open();

@@ -98,6 +98,9 @@ MSR_INLINE BOOL msr_write(HANDLE device, MSR_NO reg, MSR_QUAD value, MSR_CPU cpu
     };
     return msr_ioctl(device, IOCTL_WRITE_MSR, &request);
 }
+
+static HANDLE msr_device = INVALID_HANDLE_VALUE;
+
 #ifdef __cplusplus
 } // namespace msr::detail
 
