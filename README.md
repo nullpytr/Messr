@@ -45,7 +45,7 @@ Usage: wrmsr [options] regno value...
 
 ### for Windows 
 
-Outputs `build-win32/rdmsr.exe` and `build-win32/wrmsr.exe`.
+Outputs `build/win64/rdmsr.exe` and `build/win64/wrmsr.exe`.
 
 #### 1. Native
 
@@ -67,7 +67,7 @@ brew install mingw-w64
 Use the provided build script:
 
 ```sh
-sh scripts/build.sh win32
+sh scripts/build.sh win64
 ```
 
 
