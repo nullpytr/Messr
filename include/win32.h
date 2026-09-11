@@ -1,13 +1,9 @@
 /* MSR for Windows, https://github.com/nullpytr/wMSR/blob/4e39e73b9f8428b85e333d01265488e5696d9571/include/msr.hpp */
 
-#ifndef MSR_HPP
-#define MSR_HPP
+#ifndef WIN32_H
+#define WIN32_H
 
-#ifdef MSR_HPP_KERNEL_DRIVER_MODE
-#include <ntddk.h>
-#else
 #include <windows.h>
-#endif
 
 #define MSR_DEVICE_TYPE 40000
 #define IOCTL_READ_MSR  CTL_CODE(MSR_DEVICE_TYPE, 0x800, METHOD_BUFFERED, FILE_READ_ACCESS)
@@ -41,14 +37,7 @@ typedef struct _MSR_REQUEST {
     MSR_VALUE val;
 } MSR_REQUEST, *PMSR_REQUEST;
 
-/* -- Userspace API -- */
-#ifndef MSR_HPP_KERNEL_DRIVER_MODE
-#ifdef __cplusplus
-#define MSR_INLINE inline
-namespace msr::detail { // C++ wraps the C API with msr::device
-#else
 #define MSR_INLINE static inline
-#endif
 
 MSR_INLINE HANDLE msr_open(void) {
     return CreateFileW(
@@ -101,72 +90,4 @@ MSR_INLINE BOOL msr_write(HANDLE device, MSR_NO reg, MSR_QUAD value, MSR_CPU cpu
 
 static HANDLE msr_device = INVALID_HANDLE_VALUE;
 
-#ifdef __cplusplus
-} // namespace msr::detail
-
-#include <utility>
-#include <cstdint>
-#include <system_error>
-
-namespace msr {
-
-using u32 = std::uint32_t;
-using u64 = std::uint64_t;
-
-class device {
-public:
-    device() {
-        m_handle = detail::msr_open();
-            
-        if (m_handle == INVALID_HANDLE_VALUE)
-            error("Failed to open MSR device");
-    }
-
-    ~device() {
-        if (m_handle != INVALID_HANDLE_VALUE)
-            detail::msr_close(m_handle);
-    }
-
-    device(device const&) = delete;
-    device& operator=(device const&) = delete;
-
-    device(device&& other) noexcept : m_handle(std::exchange(other.m_handle, INVALID_HANDLE_VALUE)) {}
-
-    device& operator=(device&& other) noexcept {
-        if (this != &other) {
-            if (m_handle != INVALID_HANDLE_VALUE)
-                detail::msr_close(m_handle);
-            m_handle = std::exchange(other.m_handle, INVALID_HANDLE_VALUE);
-        }
-        return *this;
-    }
-
-    u64 read(u32 const reg, u32 const cpu) const {
-        u64 value;
-        if (!detail::msr_read(m_handle, reg, cpu, &value))
-            error("IOCTL_READ_MSR failed");
-
-        return value;
-    }
-
-    void write(u32 const reg, u64 const value, u32 const cpu) const {
-        if (!detail::msr_write(m_handle, reg, value, cpu))
-            error("IOCTL_WRITE_MSR failed");
-    }
-
-private:
-    /* Helpers */
-    [[noreturn]] void error(char const* message) const {
-        throw std::system_error(GetLastError(), std::system_category(), message);
-    }
-
-    /* Members */
-    HANDLE m_handle;
-};
-
-} // namespace msr
-
-#endif // __cplusplus
-#endif // !MSR_HPP_KERNEL_DRIVER_MODE
-
-#endif // MSR_HPP
+#endif // WIN32_H
