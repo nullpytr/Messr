@@ -1,5 +1,5 @@
 @echo off
 setlocal
 cd /d "%~dp0\.."
-cmake -B build
-cmake --build build --config Release
+cmake -B build-win32
+cmake --build build-win32 --config Release
