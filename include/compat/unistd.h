@@ -14,7 +14,7 @@ static size_t pread(int fd, void *data, size_t size, off_t offset) {
     uint32_t cpu = (uint32_t)fd;
     uint32_t reg = (uint32_t)offset;
 
-    if (!msr_read(msr_device, reg, cpu, data))
+    if (!msr_read(msr_device, cpu, reg, data))
         return 0;
 
     return size;
@@ -24,7 +24,7 @@ static size_t pwrite(int fd, const void *data, size_t size, off_t offset) {
     uint32_t cpu = (uint32_t)fd;
     uint32_t reg = (uint32_t)offset;
 
-    if (!msr_write(msr_device, reg, *(const MSR_QUAD *)data, cpu))
+    if (!msr_write(msr_device, cpu, reg, *(const MSR_QUAD *)data))
         return 0;
         
     return size;
