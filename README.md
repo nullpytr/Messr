@@ -71,4 +71,137 @@ Output at `build/native/rdmsr` and `build/native/wrmsr`.
 
 ```sh
 scripts/build.sh native
-``` 
+```
+
+## How it works
+
+Both `rdmsr.c` and `wrmsr.c` are unmodified from the upstream [intel/msr-tools](https://github.com/intel/msr-tools) source. 
+
+On Linux they directly use the kernel's `/dev/cpu/N/msr` devices via standard POSIX calls. On Windows, the `include/compat/` headers provide a fake posix API to `rdmsr.c`/`wrmsr.c` and redirect the syscalls to the [wMSR](https://github.com/nullpytr/wMSR) kernel driver.
+
+This works because the compat headers are included before the system headers, on Linux they simply passthrough to system headers while on windows they implement the fake posix API.
+
+```c
+#ifndef _WIN32
+#include_next <posix_header.h>
+#else
+// fake windows-only API
+#endif
+```
+
+### Device open
+
+On Linux, each CPU is a separate device file. `open` returns a file descriptor and the CPU index is baked into the path:
+
+```c
+sprintf(msr_file_name, "/dev/cpu/%d/msr", cpu);
+fd = open(msr_file_name, O_RDONLY);
+```
+
+On Windows, there is one device (`\\.\msr`) shared for all CPUs. The device handle is stored in a `static` variable in `win32.h`, shared across all compat headers:
+
+```c
+static HANDLE msr_device = INVALID_HANDLE_VALUE;
+```
+
+The compat `open()` function parses the CPU index out of the path, opens the wMSR device once (lazily, on first call), and returns the CPU index instead of the fd.  
+
+
+```c
+static int open(const char *name, int _) {
+    if (msr_device == INVALID_HANDLE_VALUE)
+        msr_device = msr_open();
+
+    int cpu;
+    sscanf(name, "/dev/cpu/%d/msr", &cpu);
+    return cpu;
+}
+```
+
+### Register read/write
+
+On Linux, `pread` uses the file offset as the MSR register number:
+
+```c
+p[read | write](fd, &data, sizeof data, reg);
+```
+
+On Windows, the compat `p[read | write]()` functions reinterpret the fake fd (returned by the compat `open()` function) as the CPU index and the offset as the register number, then call into the wMSR kernel driver:
+
+```c
+static size_t p[read | write](int fd, void *data, size_t size, off_t offset) {
+    uint32_t cpu = (uint32_t)fd;
+    uint32_t reg = (uint32_t)offset;
+
+    if (![msr_read | msr_write](msr_device, cpu, reg, data))
+        return 0;
+
+    return size;
+}
+```
+
+### CPU enumeration
+
+On Linux, CPUs are enumerated by scanning `/dev/cpu/`:
+
+```c
+scandir("/dev/cpu", &namelist, dir_filter, 0);
+```
+
+On Windows, `GetActiveProcessorCount()` gives the count and the compat `scandir()` function fakes the directory entries:
+
+```c
+static int scandir(..., struct dirent ***namelist, ...) {
+    DWORD count = GetActiveProcessorCount(ALL_PROCESSOR_GROUPS);
+    for (DWORD p = 0; p < count; ++p) {
+        int len = snprintf(NULL, 0, "%u", (unsigned)p);
+        struct dirent *entry = malloc(sizeof(struct dirent) + len + 1);
+        sprintf(entry->d_name, "%u", (unsigned)p);
+        ...
+    }
+}
+```
+
+### Error reporting
+
+On Linux, the upstream code checks specific posix `errno` values (`ENXIO`, `EIO`) to distinguish error types before falling through to generic `perror()`.  
+
+On Windows, these error paths are not possible, so we define the POSIX signals as ULONG_MAX (which will never match any `errno` value), forcing all error paths to the compat `perror()` function:
+
+```c
+#ifndef ENXIO
+#define ENXIO ULONG_MAX
+#endif
+
+#ifndef EIO
+#define EIO   ULONG_MAX
+#endif
+```
+
+And the compat `perror()` function prints the human-readable error message returned by the windows kernel API and immediately exits, with a special case for `ERROR_FILE_NOT_FOUND` to point the user at the wMSR kernel driver:
+
+```c
+static void compat_perror(const char *s) {
+    DWORD err = GetLastError();
+    char *buf = NULL;
+
+    if (err == ERROR_FILE_NOT_FOUND) {
+        buf = "Could not find the wMSR driver. See https://github.com/nullpytr/wMSR";
+    } else {
+        FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | ..., NULL, err, 0, &buf, 0, NULL);
+    }
+    fprintf(stderr, "%s: %s", s, buf);
+
+    ExitProcess(err);
+}
+```
+
+### Device close
+
+On Linux, `close(fd)` releases the file descriptor after each read or write.
+
+On Windows, the static device handle `msr_device` lives for the lifetime of the process. So the compat `close()` function is a no-op and the handle is only closed by the OS when the process exits:
+
+```c
+static void close(int _) { }
+```
