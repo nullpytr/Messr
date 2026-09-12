@@ -32,6 +32,12 @@ static size_t pwrite(int fd, const void *data, size_t size, off_t offset) {
 
 static void close(int _) { }
 
+#undef exit
+static void compat_exit(int code) {
+    ExitProcess(code ? 1 : 0);
+}
+#define exit compat_exit
+
 #undef perror
 static void compat_perror(const char *s) {
     DWORD err = GetLastError();
@@ -44,6 +50,8 @@ static void compat_perror(const char *s) {
 
     fprintf(stderr, "%s: %s", s, buf ? buf : "unknown error");
     LocalFree(buf);
+    
+    ExitProcess(err);
 }
 #define perror compat_perror
 
