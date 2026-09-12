@@ -69,7 +69,7 @@ MSR_INLINE BOOL msr_ioctl(HANDLE device, DWORD const control_code, PMSR_REQUEST 
     );
 }
 
-MSR_INLINE BOOL msr_read(HANDLE device, MSR_NO reg, MSR_CPU cpu, MSR_QUAD *value) {
+MSR_INLINE BOOL msr_read(HANDLE device, MSR_CPU cpu, MSR_NO reg, MSR_QUAD *value) {
     MSR_REQUEST request = {
         .msr_no = reg,
         .cpu = cpu
@@ -79,7 +79,7 @@ MSR_INLINE BOOL msr_read(HANDLE device, MSR_NO reg, MSR_CPU cpu, MSR_QUAD *value
     return result;
 }
 
-MSR_INLINE BOOL msr_write(HANDLE device, MSR_NO reg, MSR_QUAD value, MSR_CPU cpu) {
+MSR_INLINE BOOL msr_write(HANDLE device, MSR_CPU cpu, MSR_NO reg, MSR_QUAD value) {
     MSR_REQUEST request = { 
         .msr_no = reg,
         .cpu = cpu,
@@ -87,6 +87,7 @@ MSR_INLINE BOOL msr_write(HANDLE device, MSR_NO reg, MSR_QUAD value, MSR_CPU cpu
     };
     return msr_ioctl(device, IOCTL_WRITE_MSR, &request);
 }
+#undef MSR_INLINE
 
 static HANDLE msr_device = INVALID_HANDLE_VALUE;
 
