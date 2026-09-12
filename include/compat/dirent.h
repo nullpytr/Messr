@@ -14,10 +14,10 @@ struct dirent {
 };
 
 static int scandir(
-    const char *dir, 
+    const char *__,
     struct dirent ***namelist,
     int (*filter)(const struct dirent *),
-    int (*arg1)(const struct dirent **, const struct dirent **)
+    int (*_)(const struct dirent **, const struct dirent **)
 ) {
     DWORD count = GetActiveProcessorCount(ALL_PROCESSOR_GROUPS);
 

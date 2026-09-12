@@ -9,7 +9,7 @@
 #include <limits.h>
 #include <win32.h>
 
-static int open(const char *name, int flags) {
+static int open(const char *name, int _) {
     if (msr_device == INVALID_HANDLE_VALUE) {
         msr_device = msr_open();
         if (msr_device == INVALID_HANDLE_VALUE)

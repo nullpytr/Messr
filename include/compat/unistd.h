@@ -30,7 +30,7 @@ static size_t pwrite(int fd, const void *data, size_t size, off_t offset) {
     return size;
 }
 
-static void close(int fd) { }
+static void close(int _) { }
 
 #undef perror
 static void compat_perror(const char *s) {
@@ -41,7 +41,7 @@ static void compat_perror(const char *s) {
         FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER,
         NULL, err, 0, (LPSTR)&buf, 0, NULL
     );
-    
+
     fprintf(stderr, "%s: %s", s, buf ? buf : "unknown error");
     LocalFree(buf);
 }
