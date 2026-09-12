@@ -23,19 +23,19 @@ static int open(const char *name, int flags) {
     return cpu;
 }
 
-#undef O_RDONLY
-#undef O_WRONLY
-
+#ifndef O_RDONLY
 #define O_RDONLY 0
+#endif
+#ifndef O_WRONLY
 #define O_WRONLY 1
+#endif
 
-#undef errno
-#undef ENXIO
-#undef EIO
-
-#define errno   GetLastError()
-#define ENXIO   ULONG_MAX
-#define EIO     ULONG_MAX
+#ifndef ENXIO
+#define ENXIO ULONG_MAX
+#endif
+#ifndef EIO
+#define EIO   ULONG_MAX
+#endif
 
 #endif /* WIN32 */
 
