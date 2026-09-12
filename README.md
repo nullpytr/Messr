@@ -205,3 +205,6 @@ On Windows, the static device handle `msr_device` lives for the lifetime of the 
 ```c
 static void close(int _) { }
 ```
+
+## Why not port directly?
+Because that's not nearly as fun, and the compat layer approach avoids adding complexity to the `rdmsr.c` / `wrmsr.c` source files.
