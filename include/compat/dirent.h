@@ -10,7 +10,7 @@
 #include <win32.h>
 
 struct dirent {
-    char d_name[16];
+    char d_name[];
 };
 
 static int scandir(
@@ -26,7 +26,8 @@ static int scandir(
 
     int n = 0;
     for (DWORD p = 0; p < count; ++p) {
-        struct dirent *entry = (struct dirent *)malloc(sizeof(struct dirent));
+        int len = snprintf(NULL, 0, "%u", (unsigned)p);
+        struct dirent *entry = (struct dirent *)malloc(sizeof(struct dirent) + len + 1);
         if (!entry) continue;
         sprintf(entry->d_name, "%u", (unsigned)p);
 
