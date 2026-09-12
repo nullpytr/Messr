@@ -43,13 +43,17 @@ static void compat_perror(const char *s) {
     DWORD err = GetLastError();
     char *buf = NULL;
 
-    FormatMessageA(
-        FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-        NULL, err, 0, (LPSTR)&buf, 0, NULL
-    );
+    if (err == ERROR_FILE_NOT_FOUND) {
+        buf = "Could not find the wMSR driver.\r\nSee https://github.com/nullpytr/wMSR for help.\r\n";
+    } else {
+        FormatMessageA(
+            FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+            NULL, err, 0, (LPSTR)&buf, 0, NULL
+        );
+    }
 
     fprintf(stderr, "%s: %s", s, buf ? buf : "unknown error");
-    LocalFree(buf);
+    // LocalFree(buf);
     
     ExitProcess(err);
 }
