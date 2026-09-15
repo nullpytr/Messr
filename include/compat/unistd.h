@@ -24,7 +24,7 @@ static size_t pwrite(int fd, const void *data, size_t size, off_t offset) {
     uint32_t cpu = (uint32_t)fd;
     uint32_t reg = (uint32_t)offset;
 
-    if (!msr_write(msr_device, cpu, reg, *(const MSR_QUAD *)data))
+    if (!msr_write(msr_device, cpu, reg, *(const MSR_VALUE *)data))
         return 0;
         
     return size;

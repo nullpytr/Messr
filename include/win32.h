@@ -23,8 +23,8 @@ typedef unsigned __int32 MSR_CPU;
 typedef struct _MSR_VALUE {
     union {
         struct {
-            MSR_DOUBLE l;
-            MSR_DOUBLE h;
+            MSR_DOUBLE lo; // EAX
+            MSR_DOUBLE hi; // EDX
         };
         MSR_QUAD q;
     };
@@ -69,21 +69,21 @@ MSR_INLINE BOOL msr_ioctl(HANDLE device, DWORD const control_code, PMSR_REQUEST 
     );
 }
 
-MSR_INLINE BOOL msr_read(HANDLE device, MSR_CPU cpu, MSR_NO reg, MSR_QUAD *value) {
+MSR_INLINE BOOL msr_read(HANDLE device, MSR_CPU cpu, MSR_NO reg, MSR_VALUE *value) {
     MSR_REQUEST request = {
         .msr_no = reg,
         .cpu = cpu
     };
     BOOL result = msr_ioctl(device, IOCTL_READ_MSR, &request);
-    if (result) *value = request.val.q;
+    if (result) value->q = request.val.q;
     return result;
 }
 
-MSR_INLINE BOOL msr_write(HANDLE device, MSR_CPU cpu, MSR_NO reg, MSR_QUAD value) {
+MSR_INLINE BOOL msr_write(HANDLE device, MSR_CPU cpu, MSR_NO reg, MSR_VALUE value) {
     MSR_REQUEST request = { 
         .msr_no = reg,
         .cpu = cpu,
-        .val = { .q = value }
+        .val = value
     };
     return msr_ioctl(device, IOCTL_WRITE_MSR, &request);
 }
